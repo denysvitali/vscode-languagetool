@@ -84,7 +84,7 @@ export function activate(context: ExtensionContext) {
 	// Allow to enable languageTool in specific workspaces
 	let config = workspace.getConfiguration('languageTool');
 
-	if (config['enabled'] || true) {
+	if (config['enabled']) {
 		// Create the language client and start the client.
 		let disposable = new LanguageClient('languageTool', 'LanguageTool Client', createServer, clientOptions).start();
 
