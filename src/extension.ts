@@ -10,32 +10,12 @@ import { LanguageClient, LanguageClientOptions, SettingMonitor, StreamInfo } fro
 
 export function activate(context: ExtensionContext) {
 
+	console.log('Extension activated!');
+
 	function discoverExtensionPaths() {
 		return extensions.all
 			.filter(x => x.id.startsWith("adamvoss.vscode-languagetool-"))
 			.map(x => x.extensionPath)
-	}
-
-	function buildDesiredClasspath() {
-		const isWindows = process.platform === 'win32';
-
-		const joinCharacter = isWindows ? ';' : ':'
-
-		const additionalPaths = discoverExtensionPaths()
-			.map(p => path.resolve(context.extensionPath, '..', p, 'lib', '*'))
-			.join(joinCharacter);
-
-		let desiredClasspath = path.join('lib', '*');
-		if (additionalPaths) {
-			desiredClasspath += joinCharacter + additionalPaths
-		}
-		return desiredClasspath
-	}
-
-	function setClasspath(text: String, desiredClasspath: String): String {
-		const classpathRegexp = /^((?:set )?CLASSPATH=[%$]APP_HOME%?[\\\/])(.*)$/m
-
-		return text.replace(classpathRegexp, `$1${desiredClasspath}`)
 	}
 
 	function createServer(): Promise<StreamInfo> {
@@ -54,22 +34,18 @@ export function activate(context: ExtensionContext) {
 				throw err;
 			});
 
-			let isWindows = process.platform === 'win32';
-
 			// grab a random port.
 			server.listen(() => {
 				// Start the child java process
 				let options = { cwd: workspace.rootPath };
 
-				const scriptDir = path.resolve(context.extensionPath, 'lib', 'languagetool-languageserver', 'build', 'install', 'languagetool-languageserver', 'bin')
-				let originalScript = path.resolve(scriptDir, isWindows ? 'languagetool-languageserver.bat' : 'languagetool-languageserver')
-				const newScript = path.resolve(scriptDir, isWindows ? 'languagetool-languageserver-live.bat' : 'languagetool-languageserver-live')
 
-				const scriptText = fs.readFileSync(originalScript, "utf8")
-				const newText = setClasspath(scriptText, buildDesiredClasspath())
-				fs.writeFileSync(newScript, newText, { mode: 0o777 })
+				let process = child_process.spawn('/usr/bin/java',
+					['-jar', '/home/dvitali/Documents/git/languagetool-languageserver/build/libs/languagetool-languageserver-1.0-SNAPSHOT-all.jar',
+						server.address().port.toString()
+					], options);
 
-				let process = child_process.spawn(newScript, [server.address().port.toString()], options);
+				console.log(process);
 
 				// Send raw output to a file
 				if (context.storagePath) {
@@ -88,14 +64,18 @@ export function activate(context: ExtensionContext) {
 				}
 				else {
 					console.log("No storagePath, languagetool-languageserver logging disabled.");
+					process.stdout.pipe(fs.createWriteStream('/tmp/vscode-languagetool.log', {flags: 'w'}));
+					process.stderr.pipe(fs.createWriteStream('/tmp/vscode-languagetool-err.log', {flags: 'w'}));
 				}
 			});
 		});
 	};
 
+
+
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
-		documentSelector: ['plaintext', 'markdown'],
+		documentSelector: ['plaintext', 'markdown', 'tex'],
 		synchronize: {
 			configurationSection: 'languageTool'
 		}
@@ -104,12 +84,10 @@ export function activate(context: ExtensionContext) {
 	// Allow to enable languageTool in specific workspaces
 	let config = workspace.getConfiguration('languageTool');
 
-	if (config['enabled']) {
+	if (config['enabled'] || true) {
 		// Create the language client and start the client.
 		let disposable = new LanguageClient('languageTool', 'LanguageTool Client', createServer, clientOptions).start();
 
-		// Push the disposable to the context's subscriptions so that the 
-		// client can be deactivated on extension deactivation
 		context.subscriptions.push(disposable);
 	}
 }

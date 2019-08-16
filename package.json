@@ -52,7 +52,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "tsc -p ./ && ./lib/languagetool-languageserver/gradlew --project-dir ./lib/languagetool-languageserver/ installDist",
+    "vscode:prepublish": "tsc -p ./",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "update-vscode": "node ./node_modules/vscode/bin/install",
@@ -62,9 +62,9 @@
     "@types/mocha": "^2.2.33",
     "@types/node": "^6.0.52",
     "typescript": "^2.1.5",
-    "vscode": "^1.0.3"
+    "vscode": "^1.1.36"
   },
   "dependencies": {
-    "vscode-languageclient": "^3.1.0"
+    "vscode-languageclient": "^5.2.1"
   }
 }

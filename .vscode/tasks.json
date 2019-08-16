@@ -41,26 +41,11 @@
 			"problemMatcher": "$tsc-watch"
 		},
 		{
-			"taskName": "build-server",
-			"command": "./lib/languagetool-languageserver/gradlew",
-			"isShellCommand": true,
-			"showOutput": "silent",
-			"args": [
-				"--project-dir",
-				"./lib/languagetool-languageserver/",
-				"installDist"
-			],
-			"isBackground": false,
-			"problemMatcher": "$tsc-watch",
-			"promptOnClose": false
-		},
-		{
 			// A task runner that calls a custom npm script that compiles the extension.
 			"taskName": "build",
 			"isBuildCommand": true,
 			"dependsOn": [
 				"build-extension",
-				"build-server"
 			]
 		}
 	]
